@@ -1,10 +1,14 @@
 /* Author: Chamzas Constantinos */
 
-#include <moveit/move_group_interface/move_group_interface.h>
-#include <moveit/planning_scene_interface/planning_scene_interface.h>
+//ROS stuff
+#include <geometry_msgs/TransformStamped.h> 
+#include <tf_conversions/tf_eigen.h> 
+
 #include <gpd/GraspConfigList.h>
 #include <gpd/GraspConfig.h>
 
+#include <moveit/move_group_interface/move_group_interface.h>
+#include <moveit/planning_scene_interface/planning_scene_interface.h>
 #include <moveit_visual_tools/moveit_visual_tools.h>
 
 
@@ -15,54 +19,42 @@ public:
   getGrasps(ros::NodeHandle& n) : n_(n)
   {
     sub_ = n_.subscribe("/detect_grasps/clustered_grasps", 3,&getGrasps::callback, this);
-    graspBest_ = NULL;
+    graspBest_ = gpd::GraspConfig();
+    graspBest_.score.data = 0;
   }
+  void update(gpd::GraspConfig graspCurr){
+
+       graspBest_ = graspCurr;
+       geometry_msgs::Vector3 app = graspBest_.approach;
+	   geometry_msgs::Vector3 bin = graspBest_.binormal;
+	   geometry_msgs::Vector3 axi = graspBest_.axis;
+	   tf::Matrix3x3 rot = tf::Matrix3x3(app.x,bin.x,axi.x,app.y,bin.y,axi.y,app.z,bin.z,axi.z);
+
+	   double roll, pitch,yaw;
+	   rot.getRPY(roll,pitch,yaw);
+
+	   graspRot_ = tf::createQuaternionMsgFromRollPitchYaw(roll,pitch,yaw);
+	   approach_ = app;
+  }
+
   void callback(const gpd::GraspConfigList& input)
   {
     graspList_ = input;
    // ROS_INFO("RECEIVED GRASPS");
     for (int i = 0;i< graspList_.grasps.size();i++){
 	    gpd::GraspConfig graspCurr;
-
 	    graspCurr = graspList_.grasps[i];
-	    if (graspBest_==NULL){
-		   graspBest_ = new gpd::GraspConfig();
-	          *graspBest_ = graspCurr;
-		   graspHeader_= graspList_.header;
-		   geometry_msgs::Vector3 app = graspBest_->approach;
-		   geometry_msgs::Vector3 bin = graspBest_->binormal;
-		   geometry_msgs::Vector3 axi = graspBest_->axis;
-		   tf::Matrix3x3 rot = tf::Matrix3x3(app.x,bin.x,axi.x,app.y,bin.y,axi.y,app.z,bin.z,axi.z);
-		   //tf::Matrix3x3 rot = tf::Matrix3x3(app.x,bin.x,axi.x,app.y,bin.y,axi.y,app.z,bin.z,axi.z);
-		   double roll, pitch,yaw;
-		   rot.getRPY(roll,pitch,yaw);
-		   graspRot_ = tf::createQuaternionMsgFromRollPitchYaw(roll,pitch,yaw);
-		   approach_ = app;
-		   ROS_INFO("1st Grasp Arrived!");
-
-	    }
-	    if ((graspBest_->score.data) < (graspCurr.score.data)){
-		    *graspBest_ = graspCurr;
-		     //ROS_INFO("Sample %f,%f,%f",graspBest_->sample.x,graspBest_->sample.y,graspBest_->sample.z);
-		     graspHeader_= graspList_.header;
-		     geometry_msgs::Vector3 app = graspBest_->approach;
-		     geometry_msgs::Vector3 bin = graspBest_->binormal;
-		     geometry_msgs::Vector3 axi = graspBest_->axis;
-		     tf::Matrix3x3 rot = tf::Matrix3x3(app.x,bin.x,axi.x,app.y,bin.y,axi.y,app.z,bin.z,axi.z);
-		     //tf::Matrix3x3 rot = tf::Matrix3x3(app.x,bin.x,axi.x,app.y,bin.y,axi.y,app.z,bin.z,axi.z);
-		     double roll, pitch,yaw;
-		     rot.getRPY(roll,pitch,yaw);
-		     graspRot_ = tf::createQuaternionMsgFromRollPitchYaw(roll,pitch,yaw);
-		     approach_ = app;
-		     
+	    
+	    if ((graspBest_.score.data) < (graspCurr.score.data)){
+            update(graspCurr);
 	    }
     }
   } 
+
   geometry_msgs::Point getBestGrasp()
   {
- 
-      ROS_INFO("Sample Chosen: %f,%f,%f",graspBest_->bottom.x,graspBest_->bottom.y,graspBest_->bottom.z);
-      return graspBest_->bottom;
+      ROS_INFO("Sample Chosen: %f,%f,%f",graspBest_.bottom.x,graspBest_.bottom.y,graspBest_.bottom.z);
+      return graspBest_.bottom;
   }
   geometry_msgs::Vector3 getApproach()
   {
@@ -81,7 +73,7 @@ private:
   ros::NodeHandle n_;
   ros::Subscriber sub_;
   gpd::GraspConfigList graspList_;
-  gpd::GraspConfig* graspBest_;
+  gpd::GraspConfig graspBest_;
   std_msgs::Header graspHeader_;
   geometry_msgs::Quaternion graspRot_;
   geometry_msgs::Vector3 approach_;
