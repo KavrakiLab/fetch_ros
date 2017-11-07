@@ -1,6 +1,6 @@
 import os
 import ycm_core
-compilation_database_folder = '../../../build/planning/'
+compilation_database_folder = '../../../../build/fetch_pickup/'
 
 if os.path.exists( compilation_database_folder ):
   database = ycm_core.CompilationDatabase( compilation_database_folder )
