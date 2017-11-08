@@ -26,32 +26,28 @@ public:
     getGrasps(ros::NodeHandle& n) : n_(n), tfListener_(tfBuffer_)
     {
         sub_ = n_.subscribe("/detect_grasps/clustered_grasps", 3, &getGrasps::callback, this);
-        graspBest_ = gpd::GraspConfig();
         graspBest_.score.data = 0;
     }
-    void update(gpd::GraspConfig& graspCurr, const std::string& baseFrame,
-                const std::string& graspFrame)
+    tf::Transform graspToTF(gpd::GraspConfig& graspCurr, const std::string& baseFrame,
+                            const std::string& graspFrame)
     {
-        graspBest_ = graspCurr;
-        geometry_msgs::Vector3 app = graspBest_.approach;
-        geometry_msgs::Vector3 bin = graspBest_.binormal;
-        geometry_msgs::Vector3 axi = graspBest_.axis;
+        geometry_msgs::Vector3 app = graspCurr.approach;
+        geometry_msgs::Vector3 bin = graspCurr.binormal;
+        geometry_msgs::Vector3 axi = graspCurr.axis;
         tf::Matrix3x3 rot =
             tf::Matrix3x3(app.x, bin.x, axi.x, app.y, bin.y, axi.y, app.z, bin.z, axi.z);
 
         // The bottom point on the surface object has been chosen as origin
         // Needs to be validated again
         tf::Point origin;
-        tf::pointMsgToTF(graspBest_.bottom, origin);
+        tf::pointMsgToTF(graspCurr.bottom, origin);
         tf::Transform headToGrasp = tf::Transform(rot, origin);
 
         tf::StampedTransform worldToHead;
         tf::transformStampedMsgToTF(lookup(baseFrame, graspFrame), worldToHead);
 
-        graspTF_ = worldToHead * headToGrasp;
-        tf::vector3MsgToTF(app, graspApp_);
-        ROS_INFO("Grasp Was Updated");
-        printTF(graspTF_);
+        tf::Transform graspTF = worldToHead * headToGrasp;
+        return graspTF;
     }
 
     geometry_msgs::TransformStamped lookup(const std::string& base, const std::string& target)
@@ -68,15 +64,24 @@ public:
 
     void callback(const gpd::GraspConfigList& graspList)
     {
-        // ROS_INFO("RECEIVED GRASPS");
+        // Iterating over all differrent grasps
         for (int i = 0; i < graspList.grasps.size(); i++)
         {
-            gpd::GraspConfig graspCurr;
-            graspCurr = graspList.grasps[i];
+            gpd::GraspConfig graspCurr = graspList.grasps[i];
+            tf::Transform graspCurrTF =
+                graspToTF(graspCurr, "base_link", graspList.header.frame_id);
 
-            if ((graspBest_.score.data) < (graspCurr.score.data))
+            // MUST CHANGE
+            // THIS MAGIC NUMBER MUST BE THE HEIGHT OF THE TABLE
+            // Naively choose the grasp with the best Score
+
+            if (((graspBest_.score.data) < (graspCurr.score.data)) &&
+                (graspCurrTF.getOrigin().getZ() > 0.84))
             {
-                update(graspCurr, "base_link", graspList.header.frame_id);
+                ROS_ERROR("Grasp Updated");
+                graspTF_ = graspCurrTF;
+                printTF(graspTF_);
+                graspBest_ = graspCurr;
             }
         }
     }
@@ -89,18 +94,14 @@ public:
     geometry_msgs::Pose getGraspPoseMsg(double offset = 0)
     {
         geometry_msgs::Pose graspMsgPose;
-        geometry_msgs::Quaternion graspMsgRot;
-        geometry_msgs::Point graspMsgOrigin;
-
-        // Adding the approach in the oppossite direction of the Approach
-        // tf::Vector3 graspAppScale = graspApp_*(-offset) ;
+        // Adding the approach(X axis of Basis Column) in the oppossite direction
         tf::Vector3 graspAppScale = graspTF_.getBasis().getColumn(0) * (-offset);
 
-        tf::quaternionTFToMsg(graspTF_.getRotation(), graspMsgRot);
-        tf::pointTFToMsg(graspTF_.getOrigin() + graspAppScale, graspMsgOrigin);
-
-        graspMsgPose.orientation = graspMsgRot;
-        graspMsgPose.position = graspMsgOrigin;
+        tf::quaternionTFToMsg(graspTF_.getRotation(), graspMsgPose.orientation);
+        tf::pointTFToMsg(graspTF_.getOrigin() + graspAppScale, graspMsgPose.position);
+        // MUST CHANGE
+        // HEURISTIC APPORACH TO CHOOSE GOOD GRASPS SHOULD CHANGE IN THE FUTURE
+        graspMsgPose.position.z = 0.88;
 
         return graspMsgPose;
     }
@@ -112,7 +113,6 @@ private:
     tf2_ros::TransformListener tfListener_;
     gpd::GraspConfig graspBest_;
     tf::Transform graspTF_;
-    tf::Vector3 graspApp_;
 };
 
 int main(int argc, char** argv)
