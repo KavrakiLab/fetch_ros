@@ -16,6 +16,9 @@ find_package(catkin REQUIRED
     moveit_core
     moveit_ros_planning
     moveit_ros_planning_interface
+    tf2
+    tf2_ros
+    tf2_eigen
     pluginlib
     geometric_shapes
     moveit_visual_tools
@@ -30,6 +33,9 @@ catkin_package(
     moveit_ros_planning_interface
     interactive_markers
     gpd
+    tf2
+    tf2_ros
+    tf2_eigen
   DEPENDS
     EIGEN3
 )
