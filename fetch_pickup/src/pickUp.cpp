@@ -8,6 +8,14 @@
 #include <moveit/move_group_interface/move_group_interface.h>
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
 #include <moveit_visual_tools/moveit_visual_tools.h>
+void printQuat(tf::Transform tra) {
+    tf::Quaternion quat;
+    tf::Point orig;
+    quat = tra.getRotation();
+    orig = tra.getOrigin();
+    std::cout << "Quat:[X,Y,Z,W]=[" << quat.getX()<<','<<quat.getY()<<","<<quat.getZ()<<","<<quat.getW()<<']' << std::endl;
+    std::cout << "Orig:[X,Y,Z]=[" << orig.getX()<<','<<orig.getY()<<","<<orig.getZ()<<']' << std::endl;
+  }
 
 class getGrasps {
 public:
@@ -17,7 +25,7 @@ public:
     graspBest_ = gpd::GraspConfig();
     graspBest_.score.data = 0;
   }
-  void update(gpd::GraspConfig &graspCurr) {
+  void update(gpd::GraspConfig &graspCurr,const std::string& baseFrame, const std::string &graspFrame) {
 
     graspBest_ = graspCurr;
     geometry_msgs::Vector3 app = graspBest_.approach;
@@ -31,15 +39,13 @@ public:
     tf::Point origin;
     tf::pointMsgToTF(graspBest_.bottom, origin);
     tf::Transform headToGrasp = tf::Transform(rot, origin);
-    printQuat(headToGrasp);
 
     tf::StampedTransform worldToHead;
     tf::transformStampedMsgToTF(
-        lookup("base_link", "head_camera_rgb_optical_frame"), worldToHead);
+        lookup(baseFrame, graspFrame), worldToHead);
     printQuat(worldToHead);
 
     graspTf_ = worldToHead * headToGrasp;
-    printQuat(graspTf_);
   }
 
   geometry_msgs::TransformStamped lookup(const std::string &base,
@@ -52,27 +58,19 @@ public:
     }
   }
 
-  void callback(const gpd::GraspConfigList &input) {
-    graspList_ = input;
+  void callback(const gpd::GraspConfigList &graspList) {
     // ROS_INFO("RECEIVED GRASPS");
-    for (int i = 0; i < graspList_.grasps.size(); i++) {
+    for (int i = 0; i < graspList.grasps.size(); i++) {
       gpd::GraspConfig graspCurr;
-      graspCurr = graspList_.grasps[i];
+      graspCurr = graspList.grasps[i];
 
       if ((graspBest_.score.data) < (graspCurr.score.data)) {
         ROS_INFO("Grasp Where Updated");
-        update(graspCurr);
+        update(graspCurr,"base_link",graspList.header.frame_id);
       }
     }
   }
-  void printQuat(tf::Transform tra) {
-    tf::Quaternion quat;
-    quat = tra.getRotation();
-    std::cout << "X:" << quat.getX() << std::endl;
-    std::cout << "Y:" << quat.getY() << std::endl;
-    std::cout << "Z:" << quat.getZ() << std::endl;
-    std::cout << "W:" << quat.getW() << std::endl;
-  }
+  
 
   // geometry_msgs::Vector3 getApproach() { return approach_; }
   tf::Transform getGraspTf() { return graspTf_; };
@@ -83,7 +81,6 @@ private:
   ros::Subscriber sub_;
   tf2_ros::Buffer tfBuffer_;
   tf2_ros::TransformListener tfListener_;
-  gpd::GraspConfigList graspList_;
   gpd::GraspConfig graspBest_;
   tf::Transform graspTf_;
 };
@@ -95,6 +92,7 @@ int main(int argc, char **argv) {
   spinner.start();
   static const std::string PLANNING_GROUP = "arm";
   static const std::string PLANNING_GROUP_GRIPPER = "gripper";
+  static const std::string BASE_FRAME= "/base_link";
 
   getGrasps *grasps = new getGrasps(n);
   moveit::planning_interface::MoveGroupInterface move_group(PLANNING_GROUP);
@@ -126,6 +124,7 @@ int main(int argc, char **argv) {
   std::cout << "Waiting For Grasps to Be Received To Continue Press Enter"
             << std::endl;
   std::cin.ignore();
+
   // Planning to a Pose goal
   // We can plan a motion for this group to a desired pose for the
   // end-effector.
@@ -137,7 +136,7 @@ int main(int argc, char **argv) {
   tf::quaternionTFToMsg(grasps->getGraspTf().getRotation(), graspRot);
   tf::pointTFToMsg(grasps->getGraspTf().getOrigin(), graspOrigin);
 
-  grasps->printQuat(grasps->getGraspTf());
+  printTf(grasps->getGraspTf());
 
   graspPose.orientation = graspRot;
   graspPose.position = graspOrigin;
