@@ -48,9 +48,10 @@ public:
         tf::StampedTransform worldToHead;
         tf::transformStampedMsgToTF(lookup(baseFrame, graspFrame), worldToHead);
 
-        graspTf_ = worldToHead * headToGrasp;
-        ROS_INFO("Grasp Where Updated");
-        printTF(graspTf_);
+        graspTF_ = worldToHead * headToGrasp;
+        tf::vector3MsgToTF(app, graspApp_);
+        ROS_INFO("Grasp Was Updated");
+        printTF(graspTF_);
     }
 
     geometry_msgs::TransformStamped lookup(const std::string& base, const std::string& target)
@@ -80,12 +81,29 @@ public:
         }
     }
 
-    // geometry_msgs::Vector3 getApproach() { return approach_; }
-    tf::Transform getGraspTf()
+    tf::Transform getGraspTF()
     {
-        return graspTf_;
+        return graspTF_;
     };
-    // geometry_msgs::Quaternion getGraspRot() { return graspRot_; }
+
+    geometry_msgs::Pose getGraspPoseMsg(double offset = 0)
+    {
+        geometry_msgs::Pose graspMsgPose;
+        geometry_msgs::Quaternion graspMsgRot;
+        geometry_msgs::Point graspMsgOrigin;
+
+        // Adding the approach in the oppossite direction of the Approach
+        // tf::Vector3 graspAppScale = graspApp_*(-offset) ;
+        tf::Vector3 graspAppScale = graspTF_.getBasis().getColumn(0) * (-offset);
+
+        tf::quaternionTFToMsg(graspTF_.getRotation(), graspMsgRot);
+        tf::pointTFToMsg(graspTF_.getOrigin() + graspAppScale, graspMsgOrigin);
+
+        graspMsgPose.orientation = graspMsgRot;
+        graspMsgPose.position = graspMsgOrigin;
+
+        return graspMsgPose;
+    }
 
 private:
     ros::NodeHandle n_;
@@ -93,7 +111,8 @@ private:
     tf2_ros::Buffer tfBuffer_;
     tf2_ros::TransformListener tfListener_;
     gpd::GraspConfig graspBest_;
-    tf::Transform graspTf_;
+    tf::Transform graspTF_;
+    tf::Vector3 graspApp_;
 };
 
 int main(int argc, char** argv)
@@ -134,34 +153,28 @@ int main(int argc, char** argv)
     std::cout << "Waiting For Grasps to Be Received To Continue Press Enter" << std::endl;
     std::cin.ignore();
 
-    // Planning to a Pose goal
-    // We can plan a motion for this group to a desired pose for the
-    // end-effector.
+    geometry_msgs::Pose objGrasp = grasps->getGraspPoseMsg();
+    geometry_msgs::Pose preGrasp = grasps->getGraspPoseMsg(0.3);
+    geometry_msgs::Pose finGrasp = grasps->getGraspPoseMsg(0.1);
 
-    geometry_msgs::Pose graspPose;
-    geometry_msgs::Quaternion graspRot;
-    geometry_msgs::Point graspOrigin;
-
-    tf::quaternionTFToMsg(grasps->getGraspTf().getRotation(), graspRot);
-    tf::pointTFToMsg(grasps->getGraspTf().getOrigin(), graspOrigin);
-
-    printTf(grasps->getGraspTf());
-
-    graspPose.orientation = graspRot;
-    graspPose.position = graspOrigin;
-
-    // Now, we call the planner to compute the plan and visualize it.
-    // Note that we are just planning, not asking move_group
-    // to actually move the robot.
-    visual_tools.publishAxisLabeled(graspPose, "PreGrasp");
+    visual_tools.publishAxisLabeled(objGrasp, "OnObject");
+    visual_tools.publishAxisLabeled(preGrasp, "preGrasp");
+    visual_tools.publishAxisLabeled(finGrasp, "Grasp");
     visual_tools.trigger();
-    // visual_tools.publishAxisLabeled(target_pose_stamped1,"stamped_pose1");
     std::cout << "To plan the path press Enter" << std::endl;
     std::cin.ignore();
 
-    move_group.setPoseTarget(graspPose);
+    // Planning to a Pose goal
+    // We can plan a motion for this group to a desired pose for the
+    // end-effector.
+    move_group.setPoseTarget(preGrasp);
+    // Now, we call the planner to compute the plan and visualize it.
+    // Note that we are just planning, not asking move_group
+    // to actually move the robot.
+
     moveit::planning_interface::MoveGroupInterface::Plan my_plan;
     bool success = move_group.plan(my_plan);
+
     std::cout << "To execute the path press Enter" << std::endl;
     std::cin.ignore();
     move_group.move();
