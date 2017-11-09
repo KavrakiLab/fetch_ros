@@ -140,12 +140,7 @@ int main(int argc, char** argv)
     // We will use the :planning_scene_interface:`PlanningSceneInterface`
     // class to add and remove collision objects in our "virtual: world" scene
     moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
-    // Raw pointers are frequently used to refer to the planning kgroup for
-    // improved performance.
-    const robot_state::JointModelGroup* joint_model_group =
-        move_group.getCurrentState()->getJointModelGroup(PLANNING_GROUP);
-
-    move_group.setPoseReferenceFrame(BASE_FRAME);
+       move_group.setPoseReferenceFrame(BASE_FRAME);
     namespace rvt = rviz_visual_tools;
     moveit_visual_tools::MoveItVisualTools visual_tools(BASE_FRAME);
     visual_tools.deleteAllMarkers();
@@ -173,33 +168,52 @@ int main(int argc, char** argv)
     std::cout << "To plan the path press Enter" << std::endl;
     std::cin.ignore();
 
-    // Planning to a Pose goal
-    // We can plan a motion for this group to a desired pose for the
-    // end-effector.
+    // Setting  a Pose goal for the move_group. In this case the arm
     move_group.setPoseTarget(preGrasp);
-    // Now, we call the planner to compute the plan and visualize it.
-    // Note that we are just planning, not asking move_group
-    // to actually move the robot.
-
+    // Now, we call the planner to compute the plan .
     moveit::planning_interface::MoveGroupInterface::Plan my_plan;
-    bool success = move_group.plan(my_plan);
+    bool successPlan = move_group.plan(my_plan);
 
+    //To execute the plan we must use the execute(). Note move() both plans and executes
     std::cout << "To execute the path press Enter" << std::endl;
     std::cin.ignore();
-    move_group.move();
+    bool successExecute = move_group.execute(my_plan);
+
+    //Now we will use IK and followJointTrajectory action to move the arm to the final grap 
+    //position
+    
+     // Raw pointers are frequently used to refer to the planning kgroup for
+    // improved performance.
+    const robot_state::RobotStatePtr robotState = move_group.getCurrentState();
+    const robot_state::JointModelGroup* joint_model_group = robotState->getJointModelGroup(PLANNING_GROUP);
+    const std::vector<std::string> &joint_names = joint_model_group->getVariableNames();
+    std::vector<double> joint_values;
+    bool found_ik = robotState->setFromIK(joint_model_group,preGrasp);
+    robotState->copyJointGroupPositions(joint_model_group,joint_values);
+    if (found_ik){
+        ROS_INFO("Inverse IK was found Successfully");
+    }
+    else {
+        ROS_ERROR("Inverse IK failed . Uknown Course of action will happen");
+    }
+    
+
+
+
+
 
     std::cout << "To Open the Gripper press Enter" << std::endl;
     std::cin.ignore();
     moveit::planning_interface::MoveGroupInterface move_group_gripper(PLANNING_GROUP_GRIPPER);
     move_group_gripper.setJointValueTarget("r_gripper_finger_joint", 0.05);
     move_group_gripper.setJointValueTarget("l_gripper_finger_joint", 0.05);
-    success = move_group_gripper.plan(my_plan);
+    successPlan = move_group_gripper.plan(my_plan);
     move_group_gripper.move();
     std::cout << "To Close the Gripper press Enter" << std::endl;
     std::cin.ignore();
     move_group_gripper.setJointValueTarget("r_gripper_finger_joint", 0.02);
     move_group_gripper.setJointValueTarget("l_gripper_finger_joint", 0.02);
-    success = move_group_gripper.plan(my_plan);
+    successPlan = move_group_gripper.plan(my_plan);
     move_group_gripper.move();
     std::cin.ignore();
 }
