@@ -5,6 +5,8 @@
 #include <gpd/GraspConfig.h>
 #include <gpd/GraspConfigList.h>
 
+#include <actionlib/client/simple_action_client.h>
+#include <control_msgs/FollowJointTrajectoryAction.h>
 #include <moveit/move_group_interface/move_group_interface.h>
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
 #include <moveit_visual_tools/moveit_visual_tools.h>
@@ -125,6 +127,13 @@ int main(int argc, char** argv)
     static const std::string PLANNING_GROUP_GRIPPER = "gripper";
     static const std::string BASE_FRAME = "/base_link";
 
+    actionlib::SimpleActionClient<control_msgs::FollowJointTrajectoryAction> ac(
+        "arm_controller/follow_joint_trajectory", true);
+
+    ROS_INFO("Waiting for action server to Start...");
+    ac.waitForServer();
+
+    ROS_INFO("ActionServer started!");
     getGrasps* grasps = new getGrasps(n);
     moveit::planning_interface::MoveGroupInterface move_group(PLANNING_GROUP);
 
@@ -136,9 +145,9 @@ int main(int argc, char** argv)
     const robot_state::JointModelGroup* joint_model_group =
         move_group.getCurrentState()->getJointModelGroup(PLANNING_GROUP);
 
-    move_group.setPoseReferenceFrame("/base_link");
+    move_group.setPoseReferenceFrame(BASE_FRAME);
     namespace rvt = rviz_visual_tools;
-    moveit_visual_tools::MoveItVisualTools visual_tools("/base_link");
+    moveit_visual_tools::MoveItVisualTools visual_tools(BASE_FRAME);
     visual_tools.deleteAllMarkers();
     visual_tools.loadRemoteControl();
     visual_tools.trigger();
