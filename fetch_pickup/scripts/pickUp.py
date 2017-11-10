@@ -258,9 +258,10 @@ if __name__ == "__main__":
 
     # Move the base to be in front of the table
     # Demonstrates the use of the navigation stack
-    rospy.loginfo("Moving to table...")
-    move_base.goto(1, 0, 0)
+    #rospy.loginfo("Moving to table...")
+    #move_base.goto(1, 0, 0)
 
-    #tuck()
-    torso_action.move_to([0.4,])
-    head_action.look_at(1.5,0,1,'map')
+    rospy.loginfo("Tucking Arm...")
+    tuck()
+    #torso_action.move_to([0.4,])
+    #head_action.look_at(1.5,0,1,'map')

@@ -49,8 +49,6 @@ include_directories(SYSTEM ${Boost_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIRS})
 include_directories(${catkin_INCLUDE_DIRS})
 link_directories(${catkin_LIBRARY_DIRS})
 
-add_executable(move_group_interface_tutorial src/move_group_interface_tutorial.cpp)
-target_link_libraries(move_group_interface_tutorial ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 add_executable(pickUp src/pickUp.cpp)
 target_link_libraries(pickUp ${catkin_LIBRARIES} ${Boost_LIBRARIES})
