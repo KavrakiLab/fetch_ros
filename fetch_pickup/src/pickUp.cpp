@@ -20,8 +20,6 @@ void printTF(tf::Transform tra)
     quat = tra.getRotation();
     orig = tra.getOrigin();
     std::cout << "Quat:[X,Y,Z,W]=[" << quat.getX() << ',' << quat.getY() << "," << quat.getZ()
-              << "," << quat.getW() << ']' << std::endl;
-    std::cout << "Orig:[X,Y,Z]=[" << orig.getX() << ',' << orig.getY() << "," << orig.getZ() << ']'
               << std::endl;
 }
 
@@ -162,7 +160,7 @@ int main(int argc, char** argv)
 
     geometry_msgs::Pose objGrasp = grasps->getGraspPoseMsg();
     geometry_msgs::Pose preGrasp = grasps->getGraspPoseMsg(0.3);
-    geometry_msgs::Pose finGrasp = grasps->getGraspPoseMsg(0.1);
+    geometry_msgs::Pose finGrasp = grasps->getGraspPoseMsg(0.25);
 
     visual_tools.publishAxisLabeled(objGrasp, "OnObject");
     visual_tools.publishAxisLabeled(preGrasp, "preGrasp");
@@ -172,7 +170,7 @@ int main(int argc, char** argv)
     std::cin.ignore();
 
     // Setting  a Pose goal for the move_group. In this case the arm
-    //move_group.setPoseTarget(preGrasp);
+    move_group.setPoseTarget(preGrasp);
     // Now, we call the planner to compute the plan .
     moveit::planning_interface::MoveGroupInterface::Plan my_plan;
     bool successPlan = move_group.plan(my_plan);
