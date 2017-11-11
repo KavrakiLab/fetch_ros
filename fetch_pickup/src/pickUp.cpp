@@ -172,7 +172,7 @@ int main(int argc, char** argv)
 
     geometry_msgs::Pose objGrasp = grasps->getGraspPoseMsg();
     geometry_msgs::Pose preGrasp = grasps->getGraspPoseMsg(0.3);
-    geometry_msgs::Pose finGrasp = grasps->getGraspPoseMsg(0.08);
+    geometry_msgs::Pose finGrasp = grasps->getGraspPoseMsg(0.14);
 
     visual_tools.publishAxisLabeled(objGrasp, "OnObject");
     visual_tools.publishAxisLabeled(preGrasp, "preGrasp");
@@ -214,9 +214,10 @@ int main(int argc, char** argv)
     std::cin.ignore();
     ROS_INFO("Openning gripper ..");
     control_msgs::GripperCommandGoal gripperGoal;
-    control_msgs::GripperCommand GripperCommand;
-    GripperCommand.position = 0.05; 
-    GripperCommand.max_effort = -1; 
+    control_msgs::GripperCommand gripperCommand;
+    gripperCommand.position = 0.1; 
+    gripperCommand.max_effort = -1; 
+    gripperGoal.command = gripperCommand;
     gripperClient.sendGoal(gripperGoal);
     bool gripSuccess=  gripperClient.waitForResult();
     if (gripSuccess){ROS_INFO("ACTION WAS EXECUTED SUCCESFULY!!!!!!");}
@@ -224,6 +225,8 @@ int main(int argc, char** argv)
 
     
     ROS_INFO("Moving To grasp Location  ..");
+
+    std::cin.ignore();
     control_msgs::FollowJointTrajectoryGoal trajGoal;
     trajGoal.trajectory = trajectory.joint_trajectory;
     armClient.sendGoal(trajGoal);
@@ -231,12 +234,13 @@ int main(int argc, char** argv)
     if (trajSuccess){ROS_INFO("ACTION WAS EXECUTED SUCCESFULY!!!!!!");}
     else{ ROS_ERROR("EXECUTION FAILED DONT KNOW WHAT TO DO NOW");}
 
-    std::cout << "To execute the Grap  Press Enter" << std::endl;
+    std::cout << "To cl Grap  Press Enter" << std::endl;
     std::cin.ignore();
 
     ROS_INFO("Closing  gripper ..");
-    GripperCommand.position = 0.02; 
-    GripperCommand.max_effort = -1; 
+    gripperCommand.position = 0.02; 
+    gripperCommand.max_effort = -1; 
+    gripperGoal.command = gripperCommand;
     gripperClient.sendGoal(gripperGoal);
     gripSuccess = gripperClient.waitForResult();
     if (gripSuccess){ROS_INFO("ACTION WAS EXECUTED SUCCESFULY!!!!!!");}
