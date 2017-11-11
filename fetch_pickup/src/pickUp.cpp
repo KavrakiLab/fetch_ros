@@ -8,6 +8,10 @@
 #include <actionlib/client/simple_action_client.h>
 #include <control_msgs/FollowJointTrajectoryAction.h>
 #include <control_msgs/FollowJointTrajectoryGoal.h>
+#include <control_msgs/GripperCommandAction.h>
+#include <control_msgs/GripperCommandActionGoal.h>
+#include <control_msgs/GripperCommand.h>
+
 #include <trajectory_msgs/JointTrajectory.h>
 #include <trajectory_msgs/JointTrajectoryPoint.h>
 #include <moveit/move_group_interface/move_group_interface.h>
@@ -131,10 +135,18 @@ int main(int argc, char** argv)
     actionlib::SimpleActionClient<control_msgs::FollowJointTrajectoryAction>armClient(
         "arm_controller/follow_joint_trajectory", true);
 
-    ROS_INFO("Waiting for action server to Start...");
+    ROS_INFO("Waiting for arm client to Start...");
     armClient.waitForServer();
+    
+    ROS_INFO("Arm Client started!");
 
-    ROS_INFO("ActionServer started!");
+    actionlib::SimpleActionClient<control_msgs::GripperCommandAction>gripperClient(
+        "gripper_controller/gripper_action", true);
+
+    ROS_INFO("Waiting for gripper Client to Start...");
+    gripperClient.waitForServer();
+    ROS_INFO("Gripper Client  started!");
+
     getGrasps* grasps = new getGrasps(n);
     moveit::planning_interface::MoveGroupInterface move_group(PLANNING_GROUP);
 
@@ -198,71 +210,37 @@ int main(int argc, char** argv)
         fraction = move_group.computeCartesianPath(waypoints, eef_step, jthr, trajectory,false);
     }
 
-    std::cout << "To move to the grasp Press Enter" << std::endl;
+    std::cout << "To execute the Grap  Press Enter" << std::endl;
     std::cin.ignore();
-   // robot_model_loader::RobotModelLoader robot_model_loader("robot_description");
-   // robot_model::RobotModelPtr robot_model = robot_model_loader.getModel(); 
-   // 
-   // const robot_state::RobotStatePtr robotState(new robot_state::RobotState(robot_model)); 
-   // const robot_state::JointModelGroup* joint_model_group = robotState->getJointModelGroup(PLANNING_GROUP);
-   // const std::vector<std::string> &joint_names = joint_model_group->getVariableNames();
-   // std::vector<double> joint_values;
+    ROS_INFO("Openning gripper ..");
+    control_msgs::GripperCommandGoal gripperGoal;
+    control_msgs::GripperCommand GripperCommand;
+    GripperCommand.position = 0.05; 
+    GripperCommand.max_effort = -1; 
+    gripperClient.sendGoal(gripperGoal);
+    bool gripSuccess=  gripperClient.waitForResult();
+    if (gripSuccess){ROS_INFO("ACTION WAS EXECUTED SUCCESFULY!!!!!!");}
+    else{ ROS_ERROR("EXECUTION FAILED DONT KNOW WHAT TO DO NOW");}
 
-   // bool found_ik = robotState->setFromIK(joint_model_group,finGrasp);
-   // robotState->copyJointGroupPositions(joint_model_group,joint_values);
-   // if (found_ik){
-   //     ROS_INFO("Inverse IK was found Successfully");
+    
+    ROS_INFO("Moving To grasp Location  ..");
+    control_msgs::FollowJointTrajectoryGoal trajGoal;
+    trajGoal.trajectory = trajectory.joint_trajectory;
+    armClient.sendGoal(trajGoal);
+    bool trajSuccess=  armClient.waitForResult();
+    if (trajSuccess){ROS_INFO("ACTION WAS EXECUTED SUCCESFULY!!!!!!");}
+    else{ ROS_ERROR("EXECUTION FAILED DONT KNOW WHAT TO DO NOW");}
 
-   //     trajectory_msgs::JointTrajectory trajectory;
-   //     trajectory.points.resize(1);
-   //     trajectory_msgs::JointTrajectoryPoint trajPoint;
-   //     
-   //     for (std::size_t i =0; i<joint_names.size(); ++i)
-   //     {
-   //         ROS_INFO("Joint %s: %f",joint_names[i].c_str(), joint_values[i]);
-   //         
-   //         trajectory.joint_names.push_back(joint_names[i]);
-   //         trajPoint.positions.push_back(joint_values[i]);
-   //         trajPoint.velocities.push_back(0);
-   //         trajPoint.accelerations.push_back( 0) ;
-
-
-   //     }
-
-        control_msgs::FollowJointTrajectoryGoal trajGoal;
-        trajGoal.trajectory = trajectory.joint_trajectory;
-   //     trajGoal.trajectory.points[0] = trajPoint;
-   //     trajGoal.trajectory.points[0].time_from_start = ros::Duration(2);
-        armClient.sendGoal(trajGoal);
-        bool trajSuccess=  armClient.waitForResult();
-        if (trajSuccess){ROS_INFO("ACTION WAS EXECUTED SUCCESFULY!!!!!!");}
-        else{ ROS_ERROR("EXECUTION FAILED DONT KNOW WHAT TO DO NOW");}
-
-   // }
-   // else {
-   //     ROS_ERROR("Inverse IK failed . Uknown Course of action will happen");
-   // }
-   // 
-   // move_group.getCurrentState()->copyJointGroupPositions(joint_model_group,joint_values);
-   // for (std::size_t i =0; i<joint_names.size(); ++i)
-   //     {
-   //         ROS_INFO("Joint %s: %f",joint_names[i].c_str(), joint_values[i]);
-   //     }
-   //     
-
-
-
-    std::cout << "To Open the Gripper press Enter" << std::endl;
+    std::cout << "To execute the Grap  Press Enter" << std::endl;
     std::cin.ignore();
-    moveit::planning_interface::MoveGroupInterface move_group_gripper(PLANNING_GROUP_GRIPPER);
-    move_group_gripper.setJointValueTarget("r_gripper_finger_joint", 0.05);
-    move_group_gripper.setJointValueTarget("l_gripper_finger_joint", 0.05);
-    //successPlan = move_group_gripper.plan(my_plan);
-    move_group_gripper.move();
-    std::cout << "To Close the Gripper press Enter" << std::endl;
-    std::cin.ignore();
-    move_group_gripper.setJointValueTarget("r_gripper_finger_joint", 0.02);
-    move_group_gripper.setJointValueTarget("l_gripper_finger_joint", 0.02);
-//    successPlan = move_group_gripper.plan(my_plan); move_group_gripper.move();
-    std::cin.ignore();
+
+    ROS_INFO("Closing  gripper ..");
+    GripperCommand.position = 0.02; 
+    GripperCommand.max_effort = -1; 
+    gripperClient.sendGoal(gripperGoal);
+    gripSuccess = gripperClient.waitForResult();
+    if (gripSuccess){ROS_INFO("ACTION WAS EXECUTED SUCCESFULY!!!!!!");}
+    else{ ROS_ERROR("EXECUTION FAILED DONT KNOW WHAT TO DO NOW");}
+
+
 }
