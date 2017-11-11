@@ -160,7 +160,7 @@ int main(int argc, char** argv)
 
     geometry_msgs::Pose objGrasp = grasps->getGraspPoseMsg();
     geometry_msgs::Pose preGrasp = grasps->getGraspPoseMsg(0.3);
-    geometry_msgs::Pose finGrasp = grasps->getGraspPoseMsg(0.25);
+    geometry_msgs::Pose finGrasp = grasps->getGraspPoseMsg(0.08);
 
     visual_tools.publishAxisLabeled(objGrasp, "OnObject");
     visual_tools.publishAxisLabeled(preGrasp, "preGrasp");
@@ -187,55 +187,68 @@ int main(int argc, char** argv)
     // improved performance.
     std::cout << "To move to the grasp Press Enter" << std::endl;
     std::cin.ignore();
-    robot_model_loader::RobotModelLoader robot_model_loader("robot_description");
-    robot_model::RobotModelPtr robot_model = robot_model_loader.getModel(); 
-    
-    const robot_state::RobotStatePtr robotState(new robot_state::RobotState(robot_model)); 
-    const robot_state::JointModelGroup* joint_model_group = robotState->getJointModelGroup(PLANNING_GROUP);
-    const std::vector<std::string> &joint_names = joint_model_group->getVariableNames();
-    std::vector<double> joint_values;
+    std::vector<geometry_msgs::Pose> waypoints;
+    waypoints.push_back(preGrasp);
+    waypoints.push_back(finGrasp);
+    moveit_msgs::RobotTrajectory trajectory;
+    const double jthr= 0;
+    const double eef_step= 0.3;
+    double fraction = move_group.computeCartesianPath(waypoints, eef_step, jthr, trajectory,false);
+    while (fraction <0.8){
+        fraction = move_group.computeCartesianPath(waypoints, eef_step, jthr, trajectory,false);
+    }
 
-    bool found_ik = robotState->setFromIK(joint_model_group,finGrasp);
-    robotState->copyJointGroupPositions(joint_model_group,joint_values);
-    if (found_ik){
-        ROS_INFO("Inverse IK was found Successfully");
+    std::cout << "To move to the grasp Press Enter" << std::endl;
+    std::cin.ignore();
+   // robot_model_loader::RobotModelLoader robot_model_loader("robot_description");
+   // robot_model::RobotModelPtr robot_model = robot_model_loader.getModel(); 
+   // 
+   // const robot_state::RobotStatePtr robotState(new robot_state::RobotState(robot_model)); 
+   // const robot_state::JointModelGroup* joint_model_group = robotState->getJointModelGroup(PLANNING_GROUP);
+   // const std::vector<std::string> &joint_names = joint_model_group->getVariableNames();
+   // std::vector<double> joint_values;
 
-        trajectory_msgs::JointTrajectory trajectory;
-        trajectory.points.resize(1);
-        trajectory_msgs::JointTrajectoryPoint trajPoint;
-        
-        for (std::size_t i =0; i<joint_names.size(); ++i)
-        {
-            ROS_INFO("Joint %s: %f",joint_names[i].c_str(), joint_values[i]);
-            
-            trajectory.joint_names.push_back(joint_names[i]);
-            trajPoint.positions.push_back(joint_values[i]);
-            trajPoint.velocities.push_back(0);
-            trajPoint.accelerations.push_back( 0) ;
+   // bool found_ik = robotState->setFromIK(joint_model_group,finGrasp);
+   // robotState->copyJointGroupPositions(joint_model_group,joint_values);
+   // if (found_ik){
+   //     ROS_INFO("Inverse IK was found Successfully");
+
+   //     trajectory_msgs::JointTrajectory trajectory;
+   //     trajectory.points.resize(1);
+   //     trajectory_msgs::JointTrajectoryPoint trajPoint;
+   //     
+   //     for (std::size_t i =0; i<joint_names.size(); ++i)
+   //     {
+   //         ROS_INFO("Joint %s: %f",joint_names[i].c_str(), joint_values[i]);
+   //         
+   //         trajectory.joint_names.push_back(joint_names[i]);
+   //         trajPoint.positions.push_back(joint_values[i]);
+   //         trajPoint.velocities.push_back(0);
+   //         trajPoint.accelerations.push_back( 0) ;
 
 
-        }
+   //     }
 
         control_msgs::FollowJointTrajectoryGoal trajGoal;
-        trajGoal.trajectory = trajectory;
-        trajGoal.trajectory.points[0] = trajPoint;
-        trajGoal.trajectory.points[0].time_from_start = ros::Duration(2);
+        trajGoal.trajectory = trajectory.joint_trajectory;
+   //     trajGoal.trajectory.points[0] = trajPoint;
+   //     trajGoal.trajectory.points[0].time_from_start = ros::Duration(2);
         armClient.sendGoal(trajGoal);
         bool trajSuccess=  armClient.waitForResult();
         if (trajSuccess){ROS_INFO("ACTION WAS EXECUTED SUCCESFULY!!!!!!");}
         else{ ROS_ERROR("EXECUTION FAILED DONT KNOW WHAT TO DO NOW");}
 
-    }
-    else {
-        ROS_ERROR("Inverse IK failed . Uknown Course of action will happen");
-    }
-    
-    move_group.getCurrentState()->copyJointGroupPositions(joint_model_group,joint_values);
-    for (std::size_t i =0; i<joint_names.size(); ++i)
-        {
-            ROS_INFO("Joint %s: %f",joint_names[i].c_str(), joint_values[i]);
-        }
-        
+   // }
+   // else {
+   //     ROS_ERROR("Inverse IK failed . Uknown Course of action will happen");
+   // }
+   // 
+   // move_group.getCurrentState()->copyJointGroupPositions(joint_model_group,joint_values);
+   // for (std::size_t i =0; i<joint_names.size(); ++i)
+   //     {
+   //         ROS_INFO("Joint %s: %f",joint_names[i].c_str(), joint_values[i]);
+   //     }
+   //     
 
 
 
