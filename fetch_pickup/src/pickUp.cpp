@@ -33,7 +33,7 @@ public:
     getGrasps(ros::NodeHandle& n) : n_(n), tfListener_(tfBuffer_)
     {
         sub_ = n_.subscribe("/detect_grasps/clustered_grasps", 3, &getGrasps::callback, this);
-        graspBest_.score.data = 0;
+        reset();
     }
     tf::Transform graspToTF(gpd::GraspConfig& graspCurr, const std::string& baseFrame,
                             const std::string& graspFrame)
@@ -67,6 +67,9 @@ public:
         {
             ROS_ERROR("getGrasps::lookup:%s,%s):%s", base.c_str(), target.c_str(), ex.what());
         }
+    }
+    void reset(){
+        graspBest_.score.data =0;
     }
 
     void callback(const gpd::GraspConfigList& graspList)
@@ -167,8 +170,17 @@ int main(int argc, char** argv)
     ROS_INFO_NAMED("tutorial", "End effector link: %s", move_group.getEndEffectorLink().c_str());
 
     // waiting for a grasp to be received
+    geometry_msgs::Pose objGrasp; 
+    geometry_msgs::Pose preGrasp; 
+    geometry_msgs::Pose finGrasp;
+    
+    bool execute_pre_grasp = true;
+    while(!execute_pre_grasp){
+    grasps->reset();
+
     std::cout << "Waiting For Grasps to Be Received To Continue Press Enter" << std::endl;
     std::cin.ignore();
+
 
     geometry_msgs::Pose objGrasp = grasps->getGraspPoseMsg();
     geometry_msgs::Pose preGrasp = grasps->getGraspPoseMsg(0.3);
@@ -186,11 +198,16 @@ int main(int argc, char** argv)
     // Now, we call the planner to compute the plan .
     moveit::planning_interface::MoveGroupInterface::Plan my_plan;
     bool successPlan = move_group.plan(my_plan);
+   
 
     //To execute the plan we must use the execute(). Note move() both plans and executes
+    if (successPlan){
     std::cout << "To execute the path press Enter" << std::endl;
     std::cin.ignore();
-    bool successExecute = move_group.execute(my_plan);
+    bool execute_pre_grasp = move_group.execute(my_plan);
+    }
+
+    }
 
     //Now we will use IK and followJointTrajectory action to move the arm to the final grap 
     //position
