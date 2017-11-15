@@ -89,7 +89,7 @@ public:
             // Naively choose the grasp with the best Score
 
             if (((graspBest_.score.data) < (graspCurr.score.data)) &&
-                (graspCurrTF.getOrigin().getZ() > 0.84))
+                (graspCurrTF.getOrigin().getZ() > 0.74))
             {
                 graspTF_ = graspCurrTF;
                 graspBest_ = graspCurr;
@@ -114,7 +114,7 @@ public:
         // MUST CHANGE
         // HEURISTIC APPORACH TO CHOOSE GOOD GRASPS SHOULD CHANGE IN THE FUTURE
         
-        if (graspMsgPose.position.z < 0.88){ graspMsgPose.position.z = 0.88;}
+        //if (graspMsgPose.position.z < 0.88){ graspMsgPose.position.z = 0.88;}
 
         return graspMsgPose;
     }
@@ -153,13 +153,40 @@ int main(int argc, char** argv)
     gripperClient.waitForServer();
     ROS_INFO("Gripper Client  started!");
 
-    getGrasps* grasps = new getGrasps(n);
     moveit::planning_interface::MoveGroupInterface move_group(PLANNING_GROUP);
+    move_group.setPoseReferenceFrame(BASE_FRAME);
 
+    getGrasps* grasps = new getGrasps(n);
     // We will use the :planning_scene_interface:`PlanningSceneInterface`
     // class to add and remove collision objects in our "virtual: world" scene
-    //moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
-    move_group.setPoseReferenceFrame(BASE_FRAME);
+    ROS_INFO("Move_group was initialized");
+    moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
+    moveit_msgs::CollisionObject collision_object;
+    collision_object.header.frame_id = move_group.getPlanningFrame();
+    collision_object.id = "keep_out";
+    shape_msgs::SolidPrimitive primitive;
+    primitive.type = primitive.BOX;
+    primitive.dimensions.resize(3);
+    primitive.dimensions[0]=0.2;
+    primitive.dimensions[1]=0.5;
+    primitive.dimensions[2]=0.05;
+    geometry_msgs::Pose box_pose;
+    box_pose.orientation.w = 1;
+    box_pose.position.x = 0.15;
+    box_pose.position.y = 0;
+    box_pose.position.z = 0.375;
+    collision_object.primitives.push_back(primitive);
+    collision_object.primitive_poses.push_back(box_pose);
+    collision_object.operation= collision_object.ADD;
+    std::vector<moveit_msgs::CollisionObject> collision_objects;
+    
+    collision_objects.push_back(collision_object);
+    
+    planning_scene_interface.addCollisionObjects(collision_objects);
+
+    ROS_INFO("ADDING KEEP OUT OBJECT IN THE SCENE");
+
+
     namespace rvt = rviz_visual_tools;
     moveit_visual_tools::MoveItVisualTools visual_tools(BASE_FRAME);
     visual_tools.deleteAllMarkers();
@@ -174,6 +201,8 @@ int main(int argc, char** argv)
 
     // waiting for a grasp to be received
     geometry_msgs::Pose preGrasp; 
+    geometry_msgs::Pose preGrasp2; 
+    geometry_msgs::Pose preGrasp3; 
     geometry_msgs::Pose finGrasp;
     
     bool attemp_grasp =true;
@@ -195,6 +224,8 @@ int main(int argc, char** argv)
             std::cin.ignore();
 
             preGrasp = grasps->getGraspPoseMsg(0.3);
+            preGrasp2 = grasps->getGraspPoseMsg(0.25);
+            preGrasp3 = grasps->getGraspPoseMsg(0.2);
             finGrasp = grasps->getGraspPoseMsg(0.14);
 
             visual_tools.publishAxisLabeled(preGrasp, "preGrasp");
@@ -212,13 +243,18 @@ int main(int argc, char** argv)
 
             //To execute the plan we must use the execute(). Note move() both plans and executes
             if (success_plan){
-                std::cout << "To execute the path for preGrasp press Enter" << std::endl;
+                std::cout << "To reject the plan for pregrasp Press N to accept press Y" << std::endl;
+                char reject;
+                std::cin>> reject;
                 std::cin.ignore();
+                if (reject != 'N'){
+
                 num_tries = 0;
                 while (num_tries<5&&!execute_pre_grasp){
                         execute_pre_grasp = move_group.execute(my_plan);
                         num_tries+=1;
                 }
+            }
             }
             else {
                 ROS_INFO_NAMED("graspDemo", "Failed to find plan. Retrying ...");
@@ -234,6 +270,8 @@ int main(int argc, char** argv)
             std::cin.ignore();
             std::vector<geometry_msgs::Pose> waypoints;
             waypoints.push_back(preGrasp);
+            waypoints.push_back(preGrasp2);
+            waypoints.push_back(preGrasp3);
             waypoints.push_back(finGrasp);
             moveit_msgs::RobotTrajectory trajectory;
             const double jthr= 0;
@@ -247,19 +285,19 @@ int main(int argc, char** argv)
             if (fraction <0.8){execute_pre_grasp = false;}
             if (execute_pre_grasp){
 
-                std::cout << "To Open Gripper Press Enter" << std::endl;
-                std::cin.ignore();
-                ROS_INFO("Openning gripper ..");
-                control_msgs::GripperCommandGoal gripperGoal;
-                control_msgs::GripperCommand gripperCommand;
-                gripperCommand.position = 0.1; 
-                gripperCommand.max_effort = -1; 
-                gripperGoal.command = gripperCommand;
-                gripperClient.sendGoal(gripperGoal);
-                bool gripSuccess=  gripperClient.waitForResult();
-                if (gripSuccess){ROS_INFO_NAMED("graspDemo","Gripper Oppened Succesfully");}
-                else{ ROS_ERROR("Gripper Failed To open please override Manually");}
-
+             //   std::cout << "To Open Gripper Press Enter" << std::endl;
+             //   std::cin.ignore();
+             //   ROS_INFO("Openning gripper ..");
+             //   control_msgs::GripperCommandGoal gripperGoal;
+             //   control_msgs::GripperCommand gripperCommand;
+             //   gripperCommand.position = 0.1; 
+             //   gripperCommand.max_effort = -1; 
+             //   gripperGoal.command = gripperCommand;
+             //   gripperClient.sendGoal(gripperGoal);
+             //   bool gripSuccess=  gripperClient.waitForResult();
+             //   if (gripSuccess){ROS_INFO_NAMED("graspDemo","Gripper Oppened Succesfully");}
+             //   else{ ROS_ERROR("Gripper Failed To open please override Manually");}
+                std::cout << "To execute the trajectory for  Grasp Press Enter" << std::endl;
                 std::cin.ignore();
                 control_msgs::FollowJointTrajectoryGoal trajGoal;
                 trajGoal.trajectory = trajectory.joint_trajectory;
@@ -271,17 +309,17 @@ int main(int argc, char** argv)
                 if (execute_grasp){ROS_INFO("ACTION WAS EXECUTED SUCCESFULY!!!!!!");}
                 else{ ROS_ERROR("Execution failed ");}
 
-                std::cout << "To close the  Gripper Press Enter" << std::endl;
-                std::cin.ignore();
+             //   std::cout << "To close the  Gripper Press Enter" << std::endl;
+             //   std::cin.ignore();
 
-                ROS_INFO("Closing  gripper ..");
-                gripperCommand.position = 0.02; 
-                gripperCommand.max_effort = -1; 
-                gripperGoal.command = gripperCommand;
-                gripperClient.sendGoal(gripperGoal);
-                //gripSuccess = gripperClient.waitForResult();
-                if (gripSuccess){ROS_INFO_NAMED("graspDemo","ACTION WAS EXECUTED SUCCESFULY!!!!!!");}
-                else{ROS_ERROR_NAMED("graspDemo","Gripper Failed To close please override Manually");}
+             //   ROS_INFO("Closing  gripper ..");
+             //   gripperCommand.position = 0.02; 
+             //   gripperCommand.max_effort = -1; 
+             //   gripperGoal.command = gripperCommand;
+             //   gripperClient.sendGoal(gripperGoal);
+             //   gripSuccess = gripperClient.waitForResult();
+             //   if (gripSuccess){ROS_INFO_NAMED("graspDemo","ACTION WAS EXECUTED SUCCESFULY!!!!!!");}
+             //   else{ROS_ERROR_NAMED("graspDemo","Gripper Failed To close please override Manually");}
             
             }
         }
@@ -290,6 +328,7 @@ int main(int argc, char** argv)
        char next_action;
        std::cout << "To Execute another Grasp Enter Y" << std::endl;
        std::cin>> next_action;
+       std::cin.ignore();
        if (next_action == 'Y'){ attemp_grasp = true;}
        else { attemp_grasp = false;}
     }
