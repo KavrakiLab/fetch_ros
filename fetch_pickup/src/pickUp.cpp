@@ -17,6 +17,7 @@
 #include <moveit/move_group_interface/move_group_interface.h>
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
 #include <moveit_visual_tools/moveit_visual_tools.h>
+float thres;
 void printTF(tf::Transform tra)
 {
     tf::Quaternion quat;
@@ -89,7 +90,7 @@ public:
             // Naively choose the grasp with the best Score
 
             if (((graspBest_.score.data) < (graspCurr.score.data)) &&
-                (graspCurrTF.getOrigin().getZ() > 0.74))
+                (graspCurrTF.getOrigin().getZ() > thres))
             {
                 graspTF_ = graspCurrTF;
                 graspBest_ = graspCurr;
@@ -203,14 +204,19 @@ int main(int argc, char** argv)
     geometry_msgs::Pose preGrasp; 
     geometry_msgs::Pose preGrasp2; 
     geometry_msgs::Pose preGrasp3; 
+    geometry_msgs::Pose preGrasp4; 
+    geometry_msgs::Pose preGrasp5; 
+    geometry_msgs::Pose preGrasp6; 
     geometry_msgs::Pose finGrasp;
     
     bool attemp_grasp =true;
-    bool execute_pre_grasp;
-    bool execute_grasp;
-    bool success_plan;
+    moveit::planning_interface::MoveItErrorCode execute_pre_grasp;
+    moveit::planning_interface::MoveItErrorCode execute_grasp;
+    moveit::planning_interface::MoveItErrorCode success_plan;
     int num_tries; 
     //This is the main Loop that tries to execute a grasp from start to end
+    thres = 0.8;
+    
     while (attemp_grasp){
         execute_pre_grasp = false;
         num_tries = 0;
@@ -221,13 +227,15 @@ int main(int argc, char** argv)
             visual_tools.deleteAllMarkers();
 
             std::cout << "To visualize the current Best Grasp  Press Enter" << std::endl;
-            std::cin.ignore();
+            std::cin.ignore() ;
 
-            preGrasp = grasps->getGraspPoseMsg(0.3);
+            preGrasp = grasps->getGraspPoseMsg(0.30);
             preGrasp2 = grasps->getGraspPoseMsg(0.25);
-            preGrasp3 = grasps->getGraspPoseMsg(0.2);
+            preGrasp3 = grasps->getGraspPoseMsg(0.20);
+           // preGrasp4 = grasps->getGraspPoseMsg(0.35);
+           // preGrasp5 = grasps->getGraspPoseMsg(0.27);
+           // preGrasp6 = grasps->getGraspPoseMsg(0.20);
             finGrasp = grasps->getGraspPoseMsg(0.14);
-
             visual_tools.publishAxisLabeled(preGrasp, "preGrasp");
             visual_tools.publishAxisLabeled(finGrasp, "Grasp");
             visual_tools.trigger();
@@ -288,8 +296,8 @@ int main(int argc, char** argv)
              //   std::cout << "To Open Gripper Press Enter" << std::endl;
              //   std::cin.ignore();
              //   ROS_INFO("Openning gripper ..");
-             //   control_msgs::GripperCommandGoal gripperGoal;
-             //   control_msgs::GripperCommand gripperCommand;
+                control_msgs::GripperCommandGoal gripperGoal;
+                control_msgs::GripperCommand gripperCommand;
              //   gripperCommand.position = 0.1; 
              //   gripperCommand.max_effort = -1; 
              //   gripperGoal.command = gripperCommand;
@@ -306,20 +314,43 @@ int main(int argc, char** argv)
                         execute_grasp =  armClient.waitForResult();
                         num_tries+=1;
                 }
-                if (execute_grasp){ROS_INFO("ACTION WAS EXECUTED SUCCESFULY!!!!!!");}
-                else{ ROS_ERROR("Execution failed ");}
+                
+                //std::vector<geometry_msgs::Pose> waypoints2;
+                //waypoints2.push_back(preGrasp4);
+                //waypoints2.push_back(preGrasp5);
+                //waypoints2.push_back(preGrasp6);
+                //waypoints2.push_back(finGrasp);
+                //num_tries = 0;
+                //fraction = 0;
+                //while (fraction <0.8&& num_tries<5){
+                //    fraction = move_group.computeCartesianPath(waypoints2, eef_step, jthr, trajectory,false);
+                //    num_tries+=1;
+                //}
+                //std::cout << "To execute the trajectory for  Grasp 2 Press Enter" << std::endl;
+                //std::cin.ignore();
+   
+                //trajGoal.trajectory = trajectory.joint_trajectory;
+                //armClient.sendGoal(trajGoal);
+                //while (num_tries<5&&!execute_grasp){
+                //        execute_grasp =  armClient.waitForResult();
+                //        num_tries+=1;
 
-             //   std::cout << "To close the  Gripper Press Enter" << std::endl;
-             //   std::cin.ignore();
 
-             //   ROS_INFO("Closing  gripper ..");
-             //   gripperCommand.position = 0.02; 
-             //   gripperCommand.max_effort = -1; 
-             //   gripperGoal.command = gripperCommand;
-             //   gripperClient.sendGoal(gripperGoal);
-             //   gripSuccess = gripperClient.waitForResult();
-             //   if (gripSuccess){ROS_INFO_NAMED("graspDemo","ACTION WAS EXECUTED SUCCESFULY!!!!!!");}
-             //   else{ROS_ERROR_NAMED("graspDemo","Gripper Failed To close please override Manually");}
+                //}
+               if (execute_grasp){ROS_INFO("ACTION WAS EXECUTED SUCCESFULY!!!!!!");}
+               else{ ROS_ERROR("Execution failed ");}
+
+               std::cout << "To close the  Gripper Press Enter" << std::endl;
+               std::cin.ignore();
+
+               ROS_INFO("Closing  gripper ..");
+               gripperCommand.position = 0.02; 
+               gripperCommand.max_effort = -1; 
+               gripperGoal.command = gripperCommand;
+               gripperClient.sendGoal(gripperGoal);
+               bool gripSuccess = gripperClient.waitForResult();
+               if (gripSuccess){ROS_INFO_NAMED("graspDemo","Gripper Closed Succesfully !!!!!!");}
+               else{ROS_ERROR_NAMED("graspDemo","Gripper Failed To close please override Manually");}
             
             }
         }
