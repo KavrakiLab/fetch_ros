@@ -1,0 +1,15 @@
+<launch>
+  <!-- See moveit_ros/visualization/doc/joystick.rst for documentation -->
+
+  <arg name="dev" default="/dev/input/js1" />
+
+  <!-- Launch joy node -->
+  <node pkg="joy" type="joy_node" name="joy">
+    <param name="dev" value="$(arg dev)" /> <!-- Customize this to match the location your joystick is plugged in on-->
+  </node>
+  <!-- Teleop node -->
+  <node pkg="fetch_teleop" type="joystick_teleop" name="teleop_node"/>
+  
+
+        
+</launch>
