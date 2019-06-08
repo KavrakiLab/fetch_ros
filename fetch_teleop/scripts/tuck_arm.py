@@ -34,6 +34,7 @@ import sys
 from threading import Thread
 
 import rospy
+import rosnode
 from sensor_msgs.msg import Joy
 from moveit_msgs.msg import MoveItErrorCodes, PlanningScene
 from moveit_python import MoveGroupInterface, PlanningSceneInterface
@@ -45,7 +46,7 @@ class MoveItThread(Thread):
         self.start()
 
     def run(self):
-        self.process = subprocess.Popen(["roslaunch", "fetch_moveit_config", "move_group.launch", "--wait"])
+        self.process = subprocess.Popen(["roslaunch", "fetch_moveit_config", "move_group.launch"])
         _, _ = self.process.communicate()
 
     def stop(self):
@@ -53,12 +54,12 @@ class MoveItThread(Thread):
         self.process.wait()
 
 def is_moveit_running():
-    output = subprocess.check_output(["rosnode", "info", "move_group"], stderr=subprocess.STDOUT)
-    if output.find("unknown node") >= 0:
-        return False
-    if output.find("Communication with node") >= 0:
-        return False
-    return True
+    lst = rosnode.get_node_names()
+    if any("move_group" in s for s in lst):
+        print " is running!!" 
+        #output = subprocess.check_output(["rosnode", "info", "move_group"], stderr=subprocess.STDOUT)
+        return True
+    return False
 
 class TuckThread(Thread):
 
