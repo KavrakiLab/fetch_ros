@@ -116,8 +116,8 @@ class TuckThread(Thread):
 class TuckArmTeleop:
 
     def __init__(self):
-        self.unfurl_button = rospy.get_param("~unfurl_button", 7)  # default button is the down button
-        self.deadman = rospy.get_param("~deadman_button", 10)
+        self.unfurl_button = rospy.get_param("~unfurl_button", 9)  # default button is the down button
+        self.deadman = rospy.get_param("~deadman_button", 4)
         self.unfurling = False
 
         self.pressed = False

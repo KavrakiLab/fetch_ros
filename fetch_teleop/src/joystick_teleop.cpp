@@ -97,7 +97,7 @@ public:
     ros::NodeHandle pnh(nh, name);
 
     // Button mapping
-    pnh.param("button_deadman", deadman_, 10);
+    pnh.param("button_deadman", deadman_, 4);
     pnh.param("axis_x", axis_x_, 1);
     pnh.param("axis_w", axis_w_, 0);
 
@@ -257,9 +257,9 @@ public:
     ros::NodeHandle pnh(nh, name);
 
     // Button mapping
-    pnh.param("button_deadman", deadman_, 10);
-    pnh.param("button_increase", inc_button_, 12);
-    pnh.param("button_decrease", dec_button_, 14);
+    pnh.param("button_deadman", deadman_, 4);
+    pnh.param("button_increase", inc_button_, 3);
+    pnh.param("button_decrease", dec_button_, 1);
 
     // Joint Limits
     pnh.param("min_position", min_position_, 0.0);
@@ -379,9 +379,9 @@ public:
     ros::NodeHandle pnh(nh, name);
 
     // Button mapping
-    pnh.param("button_deadman", deadman_, 10);
-    pnh.param("button_open", open_button_, 0);
-    pnh.param("button_close", close_button_, 3);
+    pnh.param("button_deadman", deadman_, 4);
+    pnh.param("button_open", open_button_, 8);
+    pnh.param("button_close", close_button_, 9);
 
     // Joint Limits
     pnh.param("closed_position", min_position_, 0.0);
@@ -458,9 +458,9 @@ public:
     ros::NodeHandle pnh(nh, name);
 
     // Button mapping
-    pnh.param("button_deadman", deadman_, 10);
+    pnh.param("button_deadman", deadman_, 4);
     pnh.param("axis_pan", axis_pan_, 2);
-    pnh.param("axis_tilt", axis_tilt_, 3);
+    pnh.param("axis_tilt", axis_tilt_, 5);
 
     // Joint limits
     pnh.param("max_vel_pan", max_vel_pan_, 1.5);
@@ -577,13 +577,13 @@ public:
 
     pnh.param("axis_x", axis_x_, 1);
     pnh.param("axis_y", axis_y_, 0);
-    pnh.param("axis_z", axis_z_, 3);
+    pnh.param("axis_z", axis_z_, 5);
     pnh.param("axis_roll", axis_roll_, 1);
     pnh.param("axis_pitch", axis_pitch_, 0);
-    pnh.param("axis_yaw", axis_yaw_, 3);
+    pnh.param("axis_yaw", axis_yaw_, 5);
 
-    pnh.param("button_arm_linear", button_linear_, 11);
-    pnh.param("button_arm_angular", button_angular_, 9);
+    pnh.param("button_arm_linear", button_linear_, 5);
+    pnh.param("button_arm_angular", button_angular_, 7);
 
     // Twist limits
     pnh.param("max_vel_x", max_vel_x_, 0.05);

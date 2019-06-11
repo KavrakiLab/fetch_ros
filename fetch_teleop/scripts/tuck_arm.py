@@ -117,8 +117,8 @@ class TuckThread(Thread):
 class TuckArmTeleop:
 
     def __init__(self):
-        self.tuck_button = rospy.get_param("~tuck_button", 6)  # default button is the down button
-        self.deadman = rospy.get_param("~deadman_button", 10)
+        self.tuck_button = rospy.get_param("~tuck_button", 10)  # default button is the down button
+        self.deadman = rospy.get_param("~deadman_button", 4)
         self.tucking = False
 
         self.pressed = False
@@ -135,7 +135,7 @@ class TuckArmTeleop:
                 self.tuck_thread.stop()
             return
         try:
-            if msg.buttons[self.tuck_button] > 0 and msg.buttons[self.deadman] > 0:
+            if msg.axes[self.tuck_button] < 0.0 and msg.buttons[self.deadman] > 0:
                 if not self.pressed:
                     self.pressed_last = rospy.Time.now()
                     self.pressed = True
