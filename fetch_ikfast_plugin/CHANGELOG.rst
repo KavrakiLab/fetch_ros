@@ -2,6 +2,24 @@
 Changelog for package fetch_ikfast_plugin
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.8.1 (2019-04-04)
+------------------
+* fix Error in latest IK_Fast Plugin `#113 <https://github.com/fetchrobotics/fetch_ros/issues/113>`_ (`#114 <https://github.com/fetchrobotics/fetch_ros/issues/114>`_)
+    * fix Error in latest IK_Fast Plugin `#113 <https://github.com/fetchrobotics/fetch_ros/issues/113>`_ with moveit 1.0 interface
+    * Related to the fix for issue `#103 <https://github.com/fetchrobotics/fetch_ros/issues/103>`_ PR `#107 <https://github.com/fetchrobotics/fetch_ros/issues/107>`_ used the wrong link
+* Merge pull request `#107 <https://github.com/fetchrobotics/fetch_ros/issues/107>`_ from moriarty/update-ikfast-plugin
+    [IKFast Plugin] Regenerate fetch_ikfast_plugin
+* Contributors: Alexander Moriarty, Carl Saldanha, I-Chen Jwo
+
+0.8.0 (2019-02-13)
+------------------
+* [package.xml] REP-140 package format 2 (`#104 <https://github.com/fetchrobotics/fetch_ros/issues/104>`_)
+  closes `#83 <https://github.com/fetchrobotics/fetch_ros/issues/83>`_
+* [Docs] Add URL tags to package for wiki.ros.org (`#90 <https://github.com/fetchrobotics/fetch_ros/issues/90>`_)
+  The <url> tag is required to automatically fill in at least some info
+  on the wiki pages. The extra tags will create links to our docs.
+* Contributors: Alex Moriarty
+
 0.7.14 (2018-07-10)
 -------------------
 * updates ownership

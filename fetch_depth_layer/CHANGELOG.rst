@@ -2,6 +2,38 @@
 Changelog for package fetch_depth_layer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.8.1 (2019-04-04)
+------------------
+* sync cmake_minimum_required: 2.8.12
+* [fetch_depth_layer][OpenCV-4] operator= compile error (`#108 <https://github.com/fetchrobotics/fetch_ros/issues/108>`_)
+    This fixes no match for ‘operator=’ error with OpenCV4 and how the cv::Ptr was being set.
+    Fixed by setting the normals_estimator\_ pointer similarly to how the plane_estimator\_ pointer is being set.
+    This closes `#82 <https://github.com/fetchrobotics/fetch_ros/issues/82>`_
+* [upstream change] pluginlib includes: h -> hpp (`#106 <https://github.com/fetchrobotics/fetch_ros/issues/106>`_)
+    pluginlib provided a script for this change, and it's been backported
+    to Indigo, Kinetic- but not Jade.
+* Contributors: Alexander Moriarty
+
+0.8.0 (2019-02-13)
+------------------
+* [package.xml] REP-140 package format 2 (`#104 <https://github.com/fetchrobotics/fetch_ros/issues/104>`_)
+  closes `#83 <https://github.com/fetchrobotics/fetch_ros/issues/83>`_
+* [Docs] Add URL tags to package for wiki.ros.org (`#90 <https://github.com/fetchrobotics/fetch_ros/issues/90>`_)
+  The <url> tag is required to automatically fill in at least some info
+  on the wiki pages. The extra tags will create links to our docs.
+* Merge pull request `#81 <https://github.com/fetchrobotics/fetch_ros/issues/81>`_ from moriarty/tf2-nav-melodic-devel
+  [fetch_depth_layer][tf2] fixes for upstream navigation
+  Changes for compatibility with `ros-planning/navigation#755 <https://github.com/ros-planning/navigation/issues/755>`_
+* [fetch_depth_layer][tf2] `ros-planning/navigation#755 <https://github.com/ros-planning/navigation/issues/755>`_
+  Don't merge this until `ros-planning/navigation#755 <https://github.com/ros-planning/navigation/issues/755>`_
+  Updates fetch_depth_layer for tf2 changes coming upstream.
+* Merge pull request `#80 <https://github.com/fetchrobotics/fetch_ros/issues/80>`_ from moriarty/opencv3-runtime-symbols-not-found
+  [Depth Layer] Fixes OpenCV3 symbol lookup error
+  Originally we depended on opencv_candidate which found the OpenCV libs for us.
+* Merge pull request `#78 <https://github.com/fetchrobotics/fetch_ros/issues/78>`_ from fetchrobotics/build-on-melodic
+  fetch_depth_layer is now full OpenCV3 support
+* Contributors: Alex Moriarty, Alexander Moriarty, Russell Toris
+
 0.7.14 (2018-07-10)
 -------------------
 * updates ownership

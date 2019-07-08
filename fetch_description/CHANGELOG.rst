@@ -2,6 +2,21 @@
 Changelog for package fetch_description
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.8.1 (2019-04-04)
+------------------
+* sync cmake_minimum_required: 2.8.12
+* Added fixed dae models compatible with OpenWebGL (`#105 <https://github.com/fetchrobotics/fetch_ros/issues/105>`_)
+* Contributors: Alexander Moriarty, Miguel Angel Rodríguez
+
+0.8.0 (2019-02-13)
+------------------
+* [package.xml] REP-140 package format 2 (`#104 <https://github.com/fetchrobotics/fetch_ros/issues/104>`_)
+  closes `#83 <https://github.com/fetchrobotics/fetch_ros/issues/83>`_
+* [Docs] Add URL tags to package for wiki.ros.org (`#90 <https://github.com/fetchrobotics/fetch_ros/issues/90>`_)
+  The <url> tag is required to automatically fill in at least some info
+  on the wiki pages. The extra tags will create links to our docs.
+* Contributors: Alex Moriarty
+
 0.7.14 (2018-07-10)
 -------------------
 * updates ownership

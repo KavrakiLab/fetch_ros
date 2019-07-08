@@ -28,7 +28,7 @@
 
 // Author: Anuj Pasricha, Michael Ferguson
 
-#include <pluginlib/class_list_macros.h>
+#include <pluginlib/class_list_macros.hpp>
 #include <fetch_depth_layer/depth_layer.h>
 #include <limits>
 #include <geometry_msgs/Vector3Stamped.h>
@@ -233,10 +233,10 @@ void FetchDepthLayer::depthImageCallback(
     // Get normals
     if (normals_estimator_.empty())
     {
-      normals_estimator_ = new RgbdNormals(cv_ptr->image.rows,
-                                           cv_ptr->image.cols,
-                                           cv_ptr->image.depth(),
-                                           K_);
+      normals_estimator_.reset(new RgbdNormals(cv_ptr->image.rows,
+                                               cv_ptr->image.cols,
+                                               cv_ptr->image.depth(),
+                                               K_));
     }
     cv::Mat normals;
     (*normals_estimator_)(points3d, normals);
