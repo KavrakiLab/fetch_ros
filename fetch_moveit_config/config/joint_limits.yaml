@@ -1,14 +1,14 @@
 joint_limits:
   elbow_flex_joint:
     has_velocity_limits: true
-    max_velocity: 0.5
+    max_velocity: 0.2
     has_acceleration_limits: true
-    max_acceleration: 0.5
+    max_acceleration: 0.2
   forearm_roll_joint:
     has_velocity_limits: true
-    max_velocity: 0.57
+    max_velocity: 0.27
     has_acceleration_limits: true
-    max_acceleration: 0.5
+    max_acceleration: 0.3
   left_gripper_joint:
     has_velocity_limits: false
     max_velocity: 0
@@ -21,14 +21,14 @@ joint_limits:
     max_acceleration: 0
   shoulder_lift_joint:
     has_velocity_limits: true
-    max_velocity: 0.3
+    max_velocity: 0.2
     has_acceleration_limits: true
-    max_acceleration: 0.3 
+    max_acceleration: 0.2 
   shoulder_pan_joint:
     has_velocity_limits: true
-    max_velocity: 0.4 
+    max_velocity: 0.2 
     has_acceleration_limits: true
-    max_acceleration: 0.5
+    max_acceleration: 0.3
   torso_lift_joint:
     has_velocity_limits: true
     max_velocity: 0.1
@@ -36,16 +36,16 @@ joint_limits:
     max_acceleration: 0.5
   upperarm_roll_joint:
     has_velocity_limits: true
-    max_velocity: 0.57
+    max_velocity: 0.27
     has_acceleration_limits: true
-    max_acceleration: 0.5
+    max_acceleration: 0.3
   wrist_flex_joint:
     has_velocity_limits: true
-    max_velocity: 0.8
+    max_velocity: 0.3
     has_acceleration_limits: true
-    max_acceleration: 0.8
+    max_acceleration: 0.3
   wrist_roll_joint:
     has_velocity_limits: true
-    max_velocity: 0.8 
+    max_velocity: 0.3 
     has_acceleration_limits: true
-    max_acceleration: 0.8 
+    max_acceleration: 0.3 
