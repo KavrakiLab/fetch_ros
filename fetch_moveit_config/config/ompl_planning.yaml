@@ -15,7 +15,7 @@ planner_configs:
     type: geometric::RRTConnect
   RRTstarkConfigDefault:
     type: geometric::RRTstar
-  RRTConnectkConfigThunder:
+  ThunderConfig:
     type: geometric::RRTConnect
     experience: "thunder" 
   TRRTkConfigDefault:
@@ -33,7 +33,7 @@ arm:
     - KPIECEkConfigDefault
     - RRTkConfigDefault
     - RRTConnectkConfigDefault
-    - RRTConnectkConfigThunder
+    - ThunderConfig
     - RRTstarkConfigDefault
     - TRRTkConfigDefault
     - PRMkConfigDefault
@@ -49,7 +49,7 @@ arm_with_torso:
     - KPIECEkConfigDefault
     - RRTkConfigDefault
     - RRTConnectkConfigDefault
-    - RRTConnectkConfigThunder
+    - ThunderConfig
     - RRTstarkConfigDefault
     - TRRTkConfigDefault
     - PRMkConfigDefault
