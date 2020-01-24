@@ -15,6 +15,7 @@
 
   <!-- move_group settings -->
   <arg name="allow_trajectory_execution" default="true"/>
+  <arg name="octomap_resolution" default="0.05" />
   <arg name="allow_active_sensing" default="false"/>
   <arg name="moveit_octomap_sensor_params_file" default="$(find fetch_moveit_config)/config/sensors.yaml" />
   <arg name="fake_execution" default="false"/>
@@ -48,6 +49,9 @@
     <env name="DISPLAY" value="$(optenv DISPLAY :0)" />
 
     <param name="allow_trajectory_execution" value="$(arg allow_trajectory_execution)"/>
+
+    <param name="octomap_resolution" type="double" value="$(arg octomap_resolution)" />
+
     <param name="max_safe_path_cost" value="$(arg max_safe_path_cost)"/>
     <param name="jiggle_fraction" value="$(arg jiggle_fraction)" />
 

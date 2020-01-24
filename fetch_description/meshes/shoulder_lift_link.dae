@@ -44,7 +44,7 @@
                             <color>0 0 0 1</color>
                         </ambient>
                         <diffuse>
-                            <texture texture="texture0" texcoord="UVSET0"/>
+                            <texture texture="texture0-sampler" texcoord="UVSET0"/>
                         </diffuse>
                         <specular>
                             <color>0 0 0 1</color>
@@ -61,9 +61,6 @@
                         <transparent>
                             <color>0 0 0 1</color>
                         </transparent>
-                        <transparency>
-                            <float>0</float>
-                        </transparency>
                         <index_of_refraction>
                             <float>0</float>
                         </index_of_refraction>
