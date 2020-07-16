@@ -21,26 +21,6 @@
       </geometry>
     </collision>
   </link>
-  <link name="br_caster_link" />
-  <joint name="br_caster_joint" type="fixed">
-    <parent link="base_link"/>
-    <child link="br_caster_link"/>
-  </joint>
-  <link name="bl_caster_link" />
-  <joint name="bl_caster_joint" type="fixed">
-     <parent link="base_link"/>
-     <child link="bl_caster_link"/>
-  </joint>
-  <link name="fr_caster_link" />
-  <joint name="fr_caster_joint" type="fixed">
-     <parent link="base_link"/>
-     <child link="fr_caster_link"/>
-  </joint>
-  <link name="fl_caster_link" />
-  <joint name="fl_caster_joint" type="fixed">
-     <parent link="base_link"/>
-     <child link="fl_caster_link"/>
-  </joint>
   <link name="r_wheel_link">
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0" />
